@@ -6,6 +6,5 @@ Deploy a **WordPress Multisite** network on Kubernetes — a single installation
 
 ![Kubernetes](https://img.shields.io/badge/Kubernetes-1.28+-326CE5?logo=kubernetes&logoColor=white)
 ![WordPress](https://img.shields.io/badge/WordPress-Multisite-21759B?logo=wordpress&logoColor=white)
-![MariaDB](https://img.shields.io/badge/MariaDB-10.x-003545?logo=mariadb&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
