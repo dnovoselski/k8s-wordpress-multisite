@@ -1,0 +1,75 @@
+# ============================================================
+# Kubernetes Secrets & Sensitive Files — NEVER COMMIT THESE
+# ============================================================
+
+# Kubernetes secret manifests
+*secret*.yaml
+*secret*.yml
+*secrets*.yaml
+*secrets*.yml
+
+# Files with credentials in the name
+*credentials*
+*password*
+*passwd*
+*token*
+*.env
+.env.*
+
+# kubeconfig — contains cluster credentials
+kubeconfig
+*.kubeconfig
+~/.kube/config
+
+# TLS certs and private keys
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+
+# ============================================================
+# Editor & OS Noise
+# ============================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+.nfs*
+
+# Vim
+*.swp
+*.swo
+*.swn
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# JetBrains
+.idea/
+
+# ============================================================
+# Tooling
+# ============================================================
+
+# Helm — rendered/fetched charts (not your custom values)
+charts/
+*.lock
+
+# Terraform (if mixed infra repo)
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+
+# Ansible vault (if used alongside)
+*.vault
+vault_pass.txt
+

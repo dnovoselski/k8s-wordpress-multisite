@@ -1,0 +1,120 @@
+# wordpress-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress-deployment
+  labels:
+    deployment: wordpress
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: wordpress  ## <-- this should mactch labes
+  template:
+    metadata:
+      labels:
+        app: wordpress  ## <-- this should match matchLabels:
+    spec:
+      containers:
+      - name: wordpress
+        image: wordpress:6.9.1-php8.5-apache
+        ports:
+        - containerPort: 80
+        env:
+          - name: WORDPRESS_DB_NAME ## actual env
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret  ## The secret this value comes from. mysql-secret.yaml
+                key: MYSQL_DATABASE ## the key  to fetch
+          - name: WORDPRESS_DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: MYSQL_USER
+          - name: WORDPRESS_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: MYSQL_PASSWORD
+          - name: WORDPRESS_DB_HOST ## actual env
+            valueFrom:
+              configMapKeyRef:
+                name: wordpress           # this value comes from the ConfigMap.
+                key: WORDPRESS_DB_HOST # The key to fetch.
+          ## ── Shared Auth Keys ──────────────────────────────────
+          ## All replicas must use the same keys so login cookies
+          ## signed by one pod are valid on every other pod.
+          ## Values come from wordpress-keys-secret.yaml
+          - name: WORDPRESS_AUTH_KEY
+            valueFrom:
+              secretKeyRef:
+                name: wordpress-keys      ## The secret this value comes from. wordpress-keys-secret.yaml
+                key: WORDPRESS_AUTH_KEY
+          - name: WORDPRESS_SECURE_AUTH_KEY
+            valueFrom:
+              secretKeyRef:
+                name: wordpress-keys
+                key: WORDPRESS_SECURE_AUTH_KEY
+          - name: WORDPRESS_LOGGED_IN_KEY
+            valueFrom:
+              secretKeyRef:
+                name: wordpress-keys
+                key: WORDPRESS_LOGGED_IN_KEY
+          - name: WORDPRESS_NONCE_KEY
+            valueFrom:
+              secretKeyRef:
+                name: wordpress-keys
+                key: WORDPRESS_NONCE_KEY
+          - name: WORDPRESS_AUTH_SALT
+            valueFrom:
+              secretKeyRef:
+                name: wordpress-keys
+                key: WORDPRESS_AUTH_SALT
+          - name: WORDPRESS_SECURE_AUTH_SALT
+            valueFrom:
+              secretKeyRef:
+                name: wordpress-keys
+                key: WORDPRESS_SECURE_AUTH_SALT
+          - name: WORDPRESS_LOGGED_IN_SALT
+            valueFrom:
+              secretKeyRef:
+                name: wordpress-keys
+                key: WORDPRESS_LOGGED_IN_SALT
+          - name: WORDPRESS_NONCE_SALT
+            valueFrom:
+              secretKeyRef:
+                name: wordpress-keys
+                key: WORDPRESS_NONCE_SALT
+          ## ── End Shared Auth Keys ──────────────────────────────
+          ## ── Multisite Phase 2 (Full) ──────────────────────────
+          ## Enables WordPress Multisite with subdomain routing.
+          ## Each registered user gets their own subdomain site.
+          ## Requires wildcard DNS: *.yourdomain.com → public IP
+          ## Requires wildcard TLS: *.yourdomain.com cert
+          - name: WORDPRESS_CONFIG_EXTRA
+            value: |
+              define('MULTISITE', true);
+              define('SUBDOMAIN_INSTALL', true);
+              define('DOMAIN_CURRENT_SITE', 'yourdomain.com');
+              define('PATH_CURRENT_SITE', '/');
+              define('SITE_ID_CURRENT_SITE', 1);
+              define('BLOG_ID_CURRENT_SITE', 1);
+          ## ── End Multisite Phase 2 ─────────────────────────────
+        volumeMounts:
+          - name: wordpress-data
+            mountPath: /var/www/html/wp-content
+          ## ── Multisite .htaccess ───────────────────────────────
+          ## Mounts the rewrite rules required for subdomain routing.
+          ## Without this, subdomain requests won't route to WordPress.
+          - name: htaccess
+            mountPath: /var/www/html/.htaccess
+            subPath: .htaccess
+          ## ── End Multisite .htaccess ───────────────────────────
+      volumes:
+        - name: wordpress-data
+          persistentVolumeClaim:
+            claimName: wordpress-pvc
+        - name: htaccess
+          configMap:
+            name: wordpress-htaccess
+

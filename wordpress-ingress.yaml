@@ -1,0 +1,38 @@
+# wordpress-ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wordpress-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-wildcard
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - yourdomain.com
+    - "*.yourdomain.com"
+    secretName: yourdomain-wildcard-tls ## replace with your wildcard-tls secretName
+  rules:
+    - host: yourdomain.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: wordpress-svc
+                port:
+                  number: 80
+    - host: "*.yourdomain.com"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: wordpress-svc
+                port:
+                  number: 80
+
+
